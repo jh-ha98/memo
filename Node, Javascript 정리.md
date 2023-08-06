@@ -1,0 +1,93 @@
+## Node, Javascript 정리
+### [Node.js] nodemon
+- node monitor의 약자로, 노드가 실행하는 파일이 속한 디렉터리를 감시하고 있다가 파일이 수정되면 자동으로 노드 애플리케이션을 재시작하는 확장 모듈
+- nodemon 설치
+    ```javascript
+    npm i nodemon
+    ```
+    <img src = "./img/nodemon.png"/>
+---
+
+### [Node.js] node Worker Thread
+- 하나의 프로세스 : 어디서든 접근 가능한 전역 객체이자 그 순간 실행되고 있는 것들의 정보를 가지고 있는 프로세스
+- 하나의 스레드 : 싱글 스레드는 주어진 프로세스에서 오직 한 번에 하나의 명령만이 실행된다는 뜻
+- 하나의 이벤트 루프 : 노드를 이해하기 위해 가장 중요한 부분 중 하나
+이는 js가 단일 스레드라는 사실에도 불구하고, 언제든 가능한 callback, promise, async/await 를 통해 시스템 커널에 작업을 offload 하게 함. 노드가 비동기식, 비차단 I/O 의 특성을 가짐
+- 하나의 js 엔진 인스턴스 :  js 코드를 실행하는 컴퓨터 프로그램
+- 하나의 nodejs 인스턴스 : nodejs 코드를 실행하는 컴퓨터 프로그램
+---
+
+### [Node.js] Worker Thread 사용
+```javascript
+const { Worker, isMainThread } = require('worker_threads');
+
+if (isMainThread) { // 메인 스레드
+   const worker = new Worker(filename);
+
+   worker.on('message', (value) => {
+      console.log('워커로부터', value)
+   })
+   worker.on('exit', (value) => {
+      console.log('워커 끝');
+   })
+
+   worker.postMessage('ping'); // Worker Thread에게 메세지를 보낸다.
+}
+```
+worker 클래스는 독립적인 자바스크립트 실행 스레드를 의미, isMainThread는 현재 스레드가 기본 스레드인지 여부를 나타내는 불린 값을 반환
+- new Worker(filename) 이나 new Worker(code, {eval: true}) : 워커를 시작하는 두 가지 메인 방법, 파일명을 사용하는 편을 권장
+- worker.on('message') : 다른 스레드간 메세지를 주고받을 때 사용
+---
+
+### [Node.js] TCP Socket - net module
+- net module은 요청을 처리할 TCP 서버 및 요청을 만들 TCP소켓 클라이언트를 위한 Framework를 제공
+- 메소드
+    - server.listen() : 연결을 수신하는 서버를 시작
+    - server.close([callback]) : 서버가 새 연결을 수락하는 것을 중지하고 기존 연결을 유지
+    ```javascript
+    //net module을 가지고 와서 안에 있는 함수를 사용
+    const net = require('net');
+
+    const server = net.createServer().listen({ });
+    ```
+    ```javascript
+    server.on(event,listen);
+
+    server.on('listening', () => { /* 내용 */});
+    server.on('error', () => { /* 내용 */});
+    server.on('connection', () => { /* 내용 */});
+    server.on('close', () => { /* 내용 */});
+    ```
+    - listening : server.listen 메소드가 호출 되었을 경우
+    - event : description
+    - connection : 새로운 커넥션이 만들어질 경우
+    - close : 서버가 닫힐 경우
+    - error : 에러가 발생할 경우
+---
+
+### Browsing Context
+- 브라우저가 Document를 표시하는 환경, 모던 브라우저에서는 보통 tab 단위이지만 window나 iframe, frame이 될 수도 있다.
+- 브라우징 컨텍스트 간의 소통은 매우 제한적이지만, 같은 오리진을 가진 브라우징 컨텍스트 사이에서는 BroadcastChannel을 오픈해서 사용할 수 있다.
+---
+
+### BroadcastChannel
+- origin : 웹 브라우저에서 현재 실행 중인 스크립트의 원래 출처(Origin)를 나타내는 정보
+- 같은 오리진의 브라우징 컨텍스트끼리 소통할 수 있는 방법
+- 채널을 오픈한 다음 메세지를 보내면, 해당 채널을 구독하는 컨텍스트에서 메세지를 받아볼 수 있다.
+- broadcastchannel은 채널 이름으로 구독하고 양방향 소통 가능
+- broadcastchannel은 one-to-many
+- 채널 생성하기
+    ```javascript
+    // 브로드캐스팅 채널 생성
+    const broadChannel = new BroadcastChannel('test'); // 채널 이름을 파라미터로 받는다.
+    ```
+- 메세지를 보낼 때는 postMessage라는 메서드를 사용, 받을 때는 onmessage라는 메서드 사용
+    ```javascript
+    // broadChannel에 메시지 보내기
+    broadChannel.postMessage('test message');
+
+    // broadChannel에서 메시지 받기
+    broadChannel.onmessage = (e) => {
+        console.log('Received', e.data);
+    };
+    ```
