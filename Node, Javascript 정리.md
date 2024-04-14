@@ -1,20 +1,19 @@
-## Node, Javascript 정리
+## Node, JavaScript, TypeScript 정리
 ### [Node.js] nodemon
 - node monitor의 약자로, 노드가 실행하는 파일이 속한 디렉터리를 감시하고 있다가 파일이 수정되면 자동으로 노드 애플리케이션을 재시작하는 확장 모듈
 - nodemon 설치
-    ```javascript
+```javascript
     npm i nodemon
-    ```
+```
     <img src = "./img/nodemon.png"/>
 ---
 
-### [Node.js] node Worker Thread
-- 하나의 프로세스 : 어디서든 접근 가능한 전역 객체이자 그 순간 실행되고 있는 것들의 정보를 가지고 있는 프로세스
-- 하나의 스레드 : 싱글 스레드는 주어진 프로세스에서 오직 한 번에 하나의 명령만이 실행된다는 뜻
-- 하나의 이벤트 루프 : 노드를 이해하기 위해 가장 중요한 부분 중 하나
-이는 js가 단일 스레드라는 사실에도 불구하고, 언제든 가능한 callback, promise, async/await 를 통해 시스템 커널에 작업을 offload 하게 함. 노드가 비동기식, 비차단 I/O 의 특성을 가짐
+### [Node.js] node Thread
+- 쓰레드 : 코어(cpu)에서 프로그램 하나를 실행하는 단위 [ 쓰레드 == 코어수 == 동시에 프로그램을 실행 할 수 있는 개수]
+- 멀티 프로세스 : 여러 프로그램을 동시에 실행시키는것 처럼 보이게 하는 것 (ex. 굉장히 빠른 속도로 왔다갔다 일을 처리함)
 - 하나의 js 엔진 인스턴스 :  js 코드를 실행하는 컴퓨터 프로그램
 - 하나의 nodejs 인스턴스 : nodejs 코드를 실행하는 컴퓨터 프로그램
+- 최근에는 멀티 쓰레드 api의 발전으로 쓰레드와 멀티 프로세스의 구분을 잘 하지 않음
 ---
 
 ### [Node.js] Worker Thread 사용
@@ -71,6 +70,7 @@ worker 클래스는 독립적인 자바스크립트 실행 스레드를 의미, 
 ---
 
 ### BroadcastChannel
+- 쓰레드 간에 통신하는 node api
 - origin : 웹 브라우저에서 현재 실행 중인 스크립트의 원래 출처(Origin)를 나타내는 정보
 - 같은 오리진의 브라우징 컨텍스트끼리 소통할 수 있는 방법
 - 채널을 오픈한 다음 메세지를 보내면, 해당 채널을 구독하는 컨텍스트에서 메세지를 받아볼 수 있다.
@@ -91,3 +91,79 @@ worker 클래스는 독립적인 자바스크립트 실행 스레드를 의미, 
         console.log('Received', e.data);
     };
     ```
+---
+
+### [TypeScript] 설정 가이드
+- typescript 설치
+```sh
+    npm install -g typescript # 전역 설치
+    npm install typescript # 지역 설치(프로젝트 내부)
+```
+- typscript 컴파일
+```sh
+    tsc hello.ts # hello.ts -> hello.js 전역 설치 했을 때
+    npx tsc hello.ts # 지역 설치 했을 때
+```
+- 기본 사용법 : typescript 코드 작성 후 tsc로 컴파일 후 js로 실행
+```sh
+    tsc -w hello.ts # watch 옵션 -> ts파일 변경시 바로 컴파일
+```
+- typescript 컴파일 없이 바로 실행해주는 모듈 : ts-node, tsx, tsm
+- 보통은 tsc로 컴파일 보다 속도가 느리지만 편의성 때문에 개발 환경에서 많이 씀
+---
+
+### [TypeScript] tsconfig 설정
+```json
+{
+  "include": [ "env.d.ts", "**/*.ts", "**/*.tsx" ], // 컴파일 대상을 지정하는 옵션
+  "exclude": [ "node_modules" ], // 컴파일 대상에서 제외 시키는 옵션
+  "compilerOptions": {
+    "strict": true, // 타입 엄격모드
+
+    // 컴파일 파일의 문법의 기준
+    "target": "ESNext",
+    "target": "ES6",
+
+    "outDir": "./dist/", // 컴파일된 파일 경로
+
+    // true => 디렉토리에 .map 파일 생성, .js에는 파일이 외부 도구에 있는 위치를 나타내는 소스 맵 주석이 포함
+    "sourceMap": false,
+
+    // 타입 라이브러리 사용 목록
+    "lib": [ "DOM", "DOM.Iterable", "ESNext" ],
+
+    // CommonJS 모듈을 es6모듈 사양처럼 쓸수있게하는 옵션
+    "esModuleInterop": true,
+
+    // 각각의 파일을 모듈단위로 컴파일 할 것을 강제하는 옵션
+    "isolatedModules": true,
+
+    // 컴파일된 파일의 모듈 시스템이 어떤 시스템인지 지정해주는 옵션
+    "module": "ESNext", // import 
+    "module": "CommonJS", // require
+
+    // 어떤 모듈 해석 방법을 쓸 것인가에 대한 옵션
+    "moduleResolution": "Bundler", // Bundler 옵션은 vite 같은 번들러를 사용할 때 필요
+    "moduleResolution":"Node", // CommonJS만 지원하는 Node.js 버전의 경우 require
+
+    // json 파일의 import 허용 옵션
+    "resolveJsonModule": true,
+
+    // 경로 별명 설정
+    "baseUrl": ".",
+    "paths": {
+      "@client/*": [ "./src/client/*" ],
+      "@server/*": [ "./src/server/*" ],
+      "~/*": [ "./*" ]
+    },
+
+    // ts 파일과 js 파일 혼용 가능 옵션
+    "allowJs": true,
+
+    // 메타 프로그램 : 프로그램을 제어 하는 프로그램
+    // 데코레이션 문법 사용
+    "emitDecoratorMetadata": true, // 데코레이터 문법 쓸 때 타입스크립트를 제어
+    "experimentalDecorators": true, // 데코레이터 문법 쓸건지 말건지 ex.@Service()
+  }
+}
+```
