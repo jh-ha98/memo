@@ -113,7 +113,7 @@ worker 클래스는 독립적인 자바스크립트 실행 스레드를 의미, 
 ---
 
 ### [TypeScript] tsconfig 설정
-```json
+```jsonc
 {
   "include": [ "env.d.ts", "**/*.ts", "**/*.tsx" ], // 컴파일 대상을 지정하는 옵션
   "exclude": [ "node_modules" ], // 컴파일 대상에서 제외 시키는 옵션
